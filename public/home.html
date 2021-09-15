@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-signin-client_id" content="666663406124-fb1ntcn1n7c851eeutht8vdh6p7f9ds7.apps.googleusercontent.com">
+    <title>Home</title>
+    <link rel="stylesheet" href="home-style.css">
+    <meta name="google-signin-client_id" content="666663406124-fb1ntcn1n7c851eeutht8vdh6p7f9ds7.apps.googleusercontent.com">
+</head>
+<body>
+    <div class="profile-info">
+        <div class="info"></div>
+    </div>
+    <div class="firstsection">
+        <div class="users">
+            <h1>Users Info</h1>
+            <div class="user-list">
+    
+            </div>
+            <div class="buttons">
+                <button id="back">Back</button>
+                <p id="pagenum"></p>
+                <button id="next">Next</button>
+            </div>
+        </div>
+        <div class="products">
+            <h1>Coming Soon</h1>
+        </div>
+    </div>
+    <div class="g-signin2" data-onsuccess="onSignIn"></div>
+</body>
+<script src="https://apis.google.com/js/platform.js" async defer></script>
+<script>
+    const signOut = ()=>{
+        localStorage.removeItem('auth-token-cdfo');
+        sessionStorage.removeItem('user');
+    }
+    function signOutGoogle() {
+        var auth2 = gapi.auth2.getAuthInstance();
+        auth2.signOut().then(function () {
+            signOut();
+            console.log('User signed out.');
+        })
+    }
+
+    const showErrors = (data) =>{
+            if (data.errors){
+                err = data.errors[0].msg
+            }else{
+                err = data.msg
+            }
+            
+            alert(err)
+    }
+    const getUsers = (from=0,limit=5)=>{
+        return new Promise ((resolve,reject)=>{
+            const url = (window.location.hostname.includes('localhost'))
+                            ? `http://localhost:8080/api/users?from=${from}&limit=${limit}`
+                            : `https://restserver-curso-node-cdfo.herokuapp.com/api/users?from=${from}&limit=${limit}`
+        
+            fetch(url)
+            .then(res => res.json())
+            .then(data => resolve(data.users))
+            .catch(err => reject(err))
+        })
+    }
+    const getUserCount = () =>{
+        return new Promise ((resolve,reject)=>{
+            const url = (window.location.hostname.includes('localhost'))
+                            ? `http://localhost:8080/api/users`
+                            : `https://restserver-curso-node-cdfo.herokuapp.com/api/users`
+        
+            fetch(url)
+            .then(res => res.json())
+            .then(data => resolve(data.usersCount))
+            .catch(err => reject(err))
+        })
+    }
+    const displayContent = async(user,token)=>{
+
+        const img = document.createElement('img')
+        if(user.img){
+            img.setAttribute('src',user.img)
+        }else{
+            img.setAttribute('src','https://images.clipartlogo.com/files/images/30/302752/generic-male-avatar-rectangular_p')
+        }
+
+        const name = document.createElement('h1');
+        name.textContent = 'Hi ' + user.name;
+        name.classList.add('name');
+
+        const role = document.createElement('p');
+        let users;
+        switch (user.role){
+            case 'USER_ROLE':
+                role.textContent = 'Role: User';
+            break;
+            case 'ADMIN_ROLE':
+                role.textContent = 'Role: Admin';
+            break;
+            case 'VENTAS_ROLE':
+                role.textContent = 'Role: Vendedor';
+            break;
+        }
+        role.classList.add('role');
+
+        users = document.createElement('div');
+        users.classList.add('users');
+        const userArr = await getUsers(0,5);
+        userArr.forEach(user =>{
+            const userContainer = document.createElement('div');
+            userContainer.setAttribute('id',user.uid);
+            document.querySelector('.user-list').appendChild(userContainer)
+
+            const img = document.createElement('img')
+            if(user.img){
+                img.setAttribute('src',user.img)
+            }else{
+                img.setAttribute('src','https://images.clipartlogo.com/files/images/30/302752/generic-male-avatar-rectangular_p')
+            }
+
+            const name = document.createElement('h1');
+            name.textContent = user.name;
+
+            const email = document.createElement('p');
+            email.textContent = user.email;
+
+            const role = document.createElement('p')
+            switch (user.role) {
+                case 'USER_ROLE':
+                    role.textContent = 'user'
+                break;
+                case 'ADMIN_ROLE':
+                    role.textContent = 'admin'
+                break;
+                case 'VENTAS_ROLE':
+                    role.textContent = 'vendedor'
+                break;
+            }
+
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('delete')
+            deleteButton.textContent = 'Delete'
+            deleteButton.addEventListener('click', e =>{
+                const url = (window.location.hostname.includes('localhost'))
+                    ? `http://localhost:8080/api/users/${e.target.parentElement.id}`
+                    : `https://restserver-curso-node-cdfo.herokuapp.com/api/users/${e.target.parentElement.id}`
+
+                fetch(url,{
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-token': token
+                    }
+                })
+                .then(res => res.json()
+                                .then(data => {
+                                    if (res.ok){
+                                        console.log(data);
+                                        alert('Usuario borrado correctamente')
+                                        document.querySelector('.user-list').removeChild(document.getElementById(e.target.parentElement.id))
+                                    }else{
+                                        alert(data.msg)
+                                    }
+                                })
+                )
+                .catch(err => console.log)
+            })
+
+            userContainer.appendChild(img)
+            userContainer.appendChild(name)
+            userContainer.appendChild(email)
+            userContainer.appendChild(role)
+            userContainer.appendChild(deleteButton)
+        })
+
+        const email = document.createElement('p');
+        email.textContent = user.email;
+        email.classList.add('email');
+
+        const logOut = document.createElement('a');
+        logOut.textContent = 'Log Out';
+        logOut.classList.add('logout');
+        if (user.google){
+            logOut.setAttribute('onclick','signOutGoogle();');
+        }else{
+            logOut.setAttribute('onclick','signOut();');
+        }
+        logOut.setAttribute('href','/login');
+
+        document.querySelector('.info').appendChild(img);
+        document.querySelector('.info').appendChild(name);
+        document.querySelector('.info').appendChild(email);
+        document.querySelector('.info').appendChild(role);
+        document.querySelector('.profile-info').appendChild(logOut);
+        
+    }
+    const verifyUser = ()=>{
+        const token = localStorage.getItem('auth-token-cdfo');
+        if (!token){
+            window.location.href = '/login'
+        }else{
+            const data = {token};
+
+            const url = (window.location.hostname.includes('localhost'))
+                            ? 'http://localhost:8080/api/auth/verify'
+                            : 'https://restserver-curso-node-cdfo.herokuapp.com/api/auth/verify'
+
+            fetch(url,{
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(res =>{
+                res.json()
+                    .then(data =>{
+                        if (!res.ok){
+                            localStorage.removeItem('auth-token-cdfo');
+                            window.location.href = '/login'
+                        }else{
+                            const user = data.authUser;
+                            sessionStorage.setItem('user',user);
+                            displayContent(user,token);
+                        }
+                    })
+            })
+            .catch(err => console.log(err))
+        }
+    }
+    let page = 1;
+    document.getElementById('pagenum').textContent = 'Page: '+ page;
+    document.getElementById('back').addEventListener('click',async()=>{
+        if (page > 1){
+            document.querySelector('.user-list').innerHTML = '';
+            page--;
+            document.getElementById('pagenum').textContent = 'Page: '+ page;
+
+            const userArr = await getUsers(page*5-5,5);
+            userArr.forEach(user =>{
+            const userContainer = document.createElement('div');
+            userContainer.setAttribute('id',user.uid);
+            document.querySelector('.user-list').appendChild(userContainer)
+
+            const img = document.createElement('img')
+            if(user.img){
+                img.setAttribute('src',user.img)
+            }else{
+                img.setAttribute('src','https://images.clipartlogo.com/files/images/30/302752/generic-male-avatar-rectangular_p')
+            }
+
+            const name = document.createElement('h1');
+            name.textContent = user.name;
+
+            const email = document.createElement('p');
+            email.textContent = user.email;
+
+            const role = document.createElement('p')
+            switch (user.role) {
+                case 'USER_ROLE':
+                    role.textContent = 'user'
+                break;
+                case 'ADMIN_ROLE':
+                    role.textContent = 'admin'
+                break;
+                case 'VENTAS_ROLE':
+                    role.textContent = 'vendedor'
+                break;
+            }
+
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('delete')
+            deleteButton.textContent = 'Delete'
+            deleteButton.addEventListener('click', e =>{
+                const url = (window.location.hostname.includes('localhost'))
+                    ? `http://localhost:8080/api/users/${e.target.parentElement.id}`
+                    : `https://restserver-curso-node-cdfo.herokuapp.com/api/users/${e.target.parentElement.id}`
+
+                fetch(url,{
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-token': token
+                    }
+                })
+                .then(res => res.json()
+                                .then(data => {
+                                    if (res.ok){
+                                        console.log(data);
+                                        alert('Usuario borrado correctamente')
+                                        document.querySelector('.user-list').removeChild(document.getElementById(e.target.parentElement.id))
+                                    }else{
+                                        alert(data.msg)
+                                    }
+                                })
+                )
+                .catch(err => console.log)
+            })
+
+            userContainer.appendChild(img)
+            userContainer.appendChild(name)
+            userContainer.appendChild(email)
+            userContainer.appendChild(role)
+            userContainer.appendChild(deleteButton)
+        })
+        }
+    })
+    document.getElementById('next').addEventListener('click',async ()=>{
+        const userCount = await getUserCount()
+        if (page*5 < userCount){
+            document.querySelector('.user-list').innerHTML = '';
+            page++;
+            document.getElementById('pagenum').textContent = 'Page: '+ page;
+
+            const userArr = await getUsers(page*5-5,5);
+            userArr.forEach(user =>{
+            const userContainer = document.createElement('div');
+            userContainer.setAttribute('id',user.uid);
+            document.querySelector('.user-list').appendChild(userContainer)
+
+            const img = document.createElement('img')
+            if(user.img){
+                img.setAttribute('src',user.img)
+            }else{
+                img.setAttribute('src','https://images.clipartlogo.com/files/images/30/302752/generic-male-avatar-rectangular_p')
+            }
+
+            const name = document.createElement('h1');
+            name.textContent = user.name;
+
+            const email = document.createElement('p');
+            email.textContent = user.email;
+
+            const role = document.createElement('p')
+            switch (user.role) {
+                case 'USER_ROLE':
+                    role.textContent = 'user'
+                break;
+                case 'ADMIN_ROLE':
+                    role.textContent = 'admin'
+                break;
+                case 'VENTAS_ROLE':
+                    role.textContent = 'vendedor'
+                break;
+            }
+
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('delete')
+            deleteButton.textContent = 'Delete'
+            deleteButton.addEventListener('click', e =>{
+                const url = (window.location.hostname.includes('localhost'))
+                    ? `http://localhost:8080/api/users/${e.target.parentElement.id}`
+                    : `https://restserver-curso-node-cdfo.herokuapp.com/api/users/${e.target.parentElement.id}`
+
+                fetch(url,{
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-token': token
+                    }
+                })
+                .then(res => res.json()
+                                .then(data => {
+                                    if (res.ok){
+                                        console.log(data);
+                                        alert('Usuario borrado correctamente')
+                                        document.querySelector('.user-list').removeChild(document.getElementById(e.target.parentElement.id))
+                                    }else{
+                                        alert(data.msg)
+                                    }
+                                })
+                )
+                .catch(err => console.log)
+            })
+
+            userContainer.appendChild(img)
+            userContainer.appendChild(name)
+            userContainer.appendChild(email)
+            userContainer.appendChild(role)
+            userContainer.appendChild(deleteButton)
+        })
+        }
+    })
+    verifyUser()
+    
+</script>
+</html>

@@ -1,5 +1,6 @@
 const { request, response } = require("express");
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const User = require('../models/user');
 const { genJWT } = require("../helpers/gen-jwt");
@@ -41,6 +42,46 @@ const login = async(req=request,res=response) =>{
         })
     }
 
+}
+
+const verifyJwt = async(req=request,res=response)=>{
+
+    const {token} = req.body;
+
+    if(!token){
+        return res.status(401).json({
+            msg: 'No hay token'
+        })
+    }
+
+    try {
+
+        const {uid} = jwt.verify(token,process.env.SECRETORPRIVATEKEY);
+
+        const authUser = await User.findById(uid); 
+
+        if(!authUser){
+            return res.status(401).json({
+                msg: 'Token no válido'
+            })
+        }
+
+        if (!authUser.status){
+            return res.status(401).json({
+                msg: 'Token no válido'
+            })
+        }
+
+        res.json({
+            authUser
+        })
+        
+    } catch (error) {
+        console.log(error)
+        res.status(401).json({
+            msg: 'Token no válido'
+        })
+    }
 }
 
 const googleSignIn = async(req=request,res=response)=>{
@@ -91,5 +132,6 @@ const googleSignIn = async(req=request,res=response)=>{
 
 module.exports = {
     login,
+    verifyJwt,
     googleSignIn
 }

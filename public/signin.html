@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign in</title>
+    <link rel="stylesheet" href="auth-style.css">
+    <meta name="google-signin-client_id" content="666663406124-fb1ntcn1n7c851eeutht8vdh6p7f9ds7.apps.googleusercontent.com">
+</head>
+<body>
+    <form  onsubmit="createUser()">
+        <h1>Sign in</h1>
+        <label for="name">Name</label> 
+        <input type="text" id="name"> 
+        <label for="email">Email</label> 
+        <input type="email" id="email"> 
+        <label for="name">Password</label> 
+        <input type="password" id="password"> 
+        <input type="submit" value="Sign In" class="send-button">
+        <div class="g-signin2" data-onsuccess="onSignIn"></div>
+        <a href="/login">Already have an account?</a>
+    </form>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <script>
+        function onSignIn(googleUser) {
+
+            const url = (window.location.hostname.includes('localhost'))
+                        ? 'http://localhost:8080/api/auth/google'
+                        : 'https://restserver-curso-node-cdfo.herokuapp.com/api/auth/google'
+
+            var profile = googleUser.getBasicProfile();
+            console.log('ID: ' + profile.getId()); // Do not send to your backend! Use an ID token instead.
+            console.log('Name: ' + profile.getName());
+            console.log('Image URL: ' + profile.getImageUrl());
+            console.log('Email: ' + profile.getEmail()); // This is null if the 'email' scope is not present.
+
+            const id_token = googleUser.getAuthResponse().id_token;
+            const data = {id_token};
+
+            fetch(url,{
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(res => {
+                res.json()
+                    .then(data => {
+                        console.log(data);
+                        if (!res.ok){
+                            showErrors(data)
+                        }else{
+                            localStorage.setItem('auth-token-cdfo',data.token)
+                            window.location.href = '/home'
+                        }
+                    })
+            })
+            .catch(console.log);
+        }
+
+        const showErrors = (data) =>{
+            if (data.errors){
+                err = data.errors[0].msg
+            }else{
+                err = data.msg
+            }
+            
+            alert(err)
+        }
+
+        const createUser = () =>{
+            const name= document.getElementById('name').value;
+            const email= document.getElementById('email').value;
+            const password= document.getElementById('password').value;
+            const data = {
+                name,
+                email,
+                password
+            }
+
+            document.getElementById('name').value = '';
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+
+            const url = (window.location.hostname.includes('localhost'))
+                        ? 'http://localhost:8080/api/users'
+                        : 'https://restserver-curso-node-cdfo.herokuapp.com/api/users'
+            
+            fetch(url,{
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(res => {
+                res.json()
+                    .then(data => {
+                    console.log(data)
+                    if (!res.ok){   
+                        showErrors(data);
+                    }else{
+                        alert('Usuario creado correctamente')
+                        window.location.href = '/login'
+                    }
+            })
+            })
+            .catch(err => console.log(err));
+
+        }
+
+        document.getElementsByTagName('form')[0].addEventListener('submit', (e)=>{
+            e.preventDefault();
+        })
+
+        const verifyUser = ()=>{
+            const token = localStorage.getItem('auth-token-cdfo');
+            if (token){
+                const data = {token};
+
+                const url = (window.location.hostname.includes('localhost'))
+                                ? 'http://localhost:8080/api/auth/verify'
+                                : 'https://restserver-curso-node-cdfo.herokuapp.com/api/auth/verify'
+
+                fetch(url,{
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                })
+                .then(res =>{
+                    res.json()
+                        .then(data =>{
+                            if (res.ok){
+                                window.location.href = '/home'
+                            }
+                        })
+                })
+                .catch(err => console.log(err))
+            }
+        }
+        verifyUser()
+
+    </script>
+</body>
+</html>
