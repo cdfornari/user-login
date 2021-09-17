@@ -1,19 +1,19 @@
 const { Router } = require('express');
-const { check, validationResult } = require('express-validator');
+const { check } = require('express-validator');
 const { login, googleSignIn, verifyJwt } = require('../controllers/auth');
-const { validateUser } = require('../middlewares/user-validation');
+const { validateInput } = require('../middlewares');
 
 const router = Router();
 
 router.post('/login',[
     check('email', 'El correo es obligatorio').isEmail(),
     check('password', 'La contraseña es obligatoria').not().isEmpty(),
-    validateUser
+    validateInput
 ],login);
 
 router.post('/google',[
     check('id_token', 'El token de Google es obligatorio').not().isEmpty(),
-    validateUser
+    validateInput
 ],googleSignIn);
 
 router.post('/verify',verifyJwt)

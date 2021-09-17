@@ -2,7 +2,7 @@ const { request, response } = require("express");
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const User = require('../models/user');
+const {User} = require('../models');
 const { genJWT } = require("../helpers/gen-jwt");
 const { googleVerify } = require("../helpers/google-verify");
 

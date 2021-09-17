@@ -2,7 +2,7 @@ const { response,request } = require('express');
 const bcrypt = require('bcryptjs');
 
 
-const User = require('../models/user');
+const {User} = require('../models');
 
 const userGet = async(req = request, res = response) => {
 
@@ -55,7 +55,7 @@ const userPut = async(req, res) => {
         rest.password = bcrypt.hashSync(password,salt);
     }
 
-    const user = await User.findByIdAndUpdate(id,rest);
+    const user = await User.findByIdAndUpdate(id,rest,{new:true});
 
     res.status(201).json(user);
 }

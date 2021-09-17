@@ -4,7 +4,7 @@ const { check } = require('express-validator');
 const { validRole, emailExists, userIdExists } = require('../helpers/db-validators');
 
 const {
-    validateUser,
+    validateInput,
     validateJWT,
     validateAdminRole,
     validateRole
@@ -30,23 +30,23 @@ router.post('/', [
     check('email').custom(emailExists),
     //check('role', 'No es un rol válido').isIn(['ADMIN_ROLE','USER_ROLE']),
     check('role').custom(validRole), //= (role) => validRole(role)
-    validateUser
+    validateInput
 ], userPost)
 
 router.put('/:id', [
     check('id', 'No es un ID válido').isMongoId(),
     check('id').custom(userIdExists),
     check('role').custom(validRole),
-    validateUser
+    validateInput
 ], userPut)
 
 router.delete('/:id', [
     validateJWT,
     //validateAdminRole,
-    validateRole('ADMIN_ROLE','VENTAS_ROLE'),
+    validateRole('ADMIN_ROLE'),
     check('id', 'No es un ID válido').isMongoId(),
     check('id').custom(userIdExists),
-    validateUser
+    validateInput
 ],
 userDelete)
 
