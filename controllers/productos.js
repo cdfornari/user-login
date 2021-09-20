@@ -4,7 +4,7 @@ const { findByIdAndUpdate } = require("../models/categoria");
 
 const getProductos = async(req=request,res=response)=>{
 
-    const {limit=5,from=0} = req.params;
+    const {limit=5,from=0} = req.query;
 
     const [productosCount,productos] = await Promise.all([
         Producto.countDocuments({status: true}),
@@ -126,6 +126,7 @@ const deleteProducto = async(req=request,res=response)=>{
                                     })
 
     res.json(producto)
+    
 }
 
 module.exports = {

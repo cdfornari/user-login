@@ -12,6 +12,7 @@
 <body>
     <div class="profile-info">
         <div class="info"></div>
+        <a href="/profile" vclass="profile">My Profile</a>
     </div>
     <div class="firstsection">
         <div class="users">
@@ -26,7 +27,15 @@
             </div>
         </div>
         <div class="products">
-            <h1>Coming Soon</h1>
+            <h1>Products</h1>
+            <div class="products-list">
+    
+            </div>
+            <div class="buttons">
+                <button id="back-p">Back</button>
+                <p id="pagenum-p"></p>
+                <button id="next-p">Next</button>
+            </div>
         </div>
     </div>
     <div class="g-signin2" data-onsuccess="onSignIn"></div>
@@ -66,6 +75,30 @@
             .catch(err => reject(err))
         })
     }
+    const getProducts = (from=0,limit=5)=>{
+        return new Promise ((resolve,reject)=>{
+            const url = (window.location.hostname.includes('localhost'))
+                            ? `http://localhost:8080/api/productos?from=${from}&limit=${limit}`
+                            : `https://restserver-curso-node-cdfo.herokuapp.com/api/productos?from=${from}&limit=${limit}`
+        
+            fetch(url)
+            .then(res => res.json())
+            .then(data => resolve(data.productos))
+            .catch(err => reject(err))
+        })
+    }
+    const getProductsCount = () =>{
+        return new Promise ((resolve,reject)=>{
+            const url = (window.location.hostname.includes('localhost'))
+                            ? `http://localhost:8080/api/productos`
+                            : `https://restserver-curso-node-cdfo.herokuapp.com/api/productos`
+        
+            fetch(url)
+            .then(res => res.json())
+            .then(data => resolve(data.productosCount))
+            .catch(err => reject(err))
+        })
+    }
     const getUserCount = () =>{
         return new Promise ((resolve,reject)=>{
             const url = (window.location.hostname.includes('localhost'))
@@ -78,7 +111,7 @@
             .catch(err => reject(err))
         })
     }
-    const displayContent = async(user,token)=>{
+    const displayUserContent = async(user,token)=>{
 
         const img = document.createElement('img')
         if(user.img){
@@ -197,6 +230,48 @@
         document.querySelector('.profile-info').appendChild(logOut);
         
     }
+
+    displayProductsContent = async() =>{
+
+        const products = document.createElement('div');
+        products.classList.add('products');
+        const productsArr = await getProducts(0,5);
+        productsArr.forEach(product =>{
+            const productContainer = document.createElement('div');
+            productContainer.setAttribute('id',product._id);
+            document.querySelector('.products-list').appendChild(productContainer)
+
+            const img = document.createElement('img')
+            if(product.img){
+                img.setAttribute('src',product.img)
+            }else{
+                img.setAttribute('src','https://images.clipartlogo.com/files/images/30/302752/generic-male-avatar-rectangular_p')
+            }
+
+            const name = document.createElement('h1');
+            name.textContent = product.name;
+
+            const price = document.createElement('p');
+            price.textContent = '$' + product.precio;
+
+            const categoria = document.createElement('p');
+            categoria.textContent = product.categoria.name;
+            
+            const editButton = document.createElement('button');
+            editButton.classList.add('delete')
+            editButton.textContent = 'Edit'
+            editButton.addEventListener('click', e =>{
+                window.location.href = `/product/${e.target.id}`
+            })
+
+            productContainer.appendChild(img)
+            productContainer.appendChild(name)
+            productContainer.appendChild(price)
+            productContainer.appendChild(categoria)
+            productContainer.appendChild(editButton)
+        })
+    }
+
     const verifyUser = ()=>{
         const token = localStorage.getItem('auth-token-cdfo');
         if (!token){
@@ -222,13 +297,16 @@
                         }else{
                             const user = data.authUser;
                             sessionStorage.setItem('user',user);
-                            displayContent(user,token);
+                            displayUserContent(user,token);
+                            displayProductsContent();
                         }
                     })
             })
             .catch(err => console.log(err))
         }
     }
+
+
     let page = 1;
     document.getElementById('pagenum').textContent = 'Page: '+ page;
     document.getElementById('back').addEventListener('click',async()=>{
@@ -382,6 +460,101 @@
         })
         }
     })
+
+    let pageProducts = 1;
+    document.getElementById('pagenum-p').textContent = 'Page: '+ pageProducts;
+    document.getElementById('back-p').addEventListener('click',async()=>{
+        if (pageProducts > 1){
+            document.querySelector('.products-list').innerHTML = '';
+            pageProducts--;
+            document.getElementById('pagenum-p').textContent = 'Page: '+ pageProducts;
+
+            const productsArr = await getProducts(pageProducts*5-5,5);
+            productsArr.forEach(product =>{
+                const productContainer = document.createElement('div');
+                productContainer.setAttribute('id',product._id);
+                document.querySelector('.products-list').appendChild(productContainer)
+
+                const img = document.createElement('img')
+                if(product.img){
+                    img.setAttribute('src',product.img)
+                }else{
+                    img.setAttribute('src','https://images.clipartlogo.com/files/images/30/302752/generic-male-avatar-rectangular_p')
+                }
+
+                const name = document.createElement('h1');
+                name.textContent = product.name;
+
+                const price = document.createElement('p');
+                price.textContent = '$' + product.precio;
+
+                const categoria = document.createElement('p');
+                categoria.textContent = product.categoria.name;
+                
+                const editButton = document.createElement('button');
+                editButton.classList.add('delete')
+                editButton.textContent = 'Edit'
+                editButton.addEventListener('click', e =>{
+                    window.location.href = `/product/${e.target.id}`
+                })
+
+                productContainer.appendChild(img)
+                productContainer.appendChild(name)
+                productContainer.appendChild(price)
+                productContainer.appendChild(categoria)
+                productContainer.appendChild(editButton)
+            })
+        }    
+    })
+    document.getElementById('next-p').addEventListener('click',async ()=>{
+        const productCount = await getProductsCount()
+        if (pageProducts*5 < productCount){
+            document.querySelector('.products-list').innerHTML = '';
+            pageProducts++;
+            document.getElementById('pagenum-p').textContent = 'Page: '+ pageProducts;
+
+            const productsArr = await getProducts(pageProducts*5-5,5);
+            productsArr.forEach(product =>{
+                const productContainer = document.createElement('div');
+                productContainer.setAttribute('id',product._id);
+                document.querySelector('.products-list').appendChild(productContainer)
+
+                const img = document.createElement('img')
+                if(product.img){
+                    img.setAttribute('src',product.img)
+                }else{
+                    img.setAttribute('src','https://images.clipartlogo.com/files/images/30/302752/generic-male-avatar-rectangular_p')
+                }
+
+                const name = document.createElement('h1');
+                name.textContent = product.name;
+
+                const price = document.createElement('p');
+                price.textContent = '$' + product.precio;
+
+                const desc = document.createElement('p');
+                desc.textContent = product.descripcion;
+
+                const categoria = document.createElement('p');
+                categoria.textContent = product.categoria.name;
+                
+                const editButton = document.createElement('button');
+                editButton.classList.add('delete')
+                editButton.textContent = 'Edit'
+                editButton.addEventListener('click', e =>{
+                    window.location.href = `/product/${e.target.id}`
+                })
+
+                productContainer.appendChild(img)
+                productContainer.appendChild(name)
+                productContainer.appendChild(price)
+                productContainer.appendChild(categoria)
+                productContainer.appendChild(editButton)
+            })
+        }
+    })
+
+
     verifyUser()
     
 </script>

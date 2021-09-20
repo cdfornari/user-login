@@ -76,6 +76,7 @@ body{
 }
 .user-list div img{
     max-height: 10vh;
+    max-width: 7.5vw;
 }
 .user-list div h1{
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -113,7 +114,7 @@ button:hover{
     justify-content: space-around;
     padding-top: 20px;
 }
-#pagenum{
+#pagenum,#pagenum-p{
     font-family: Helvetica, sans-serif;
     font-size: 18px;
     color: #1359C4;
@@ -122,7 +123,7 @@ button:hover{
 .products{
     width: 50%;
 }
-.products h1{
+.products > h1{
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: #1359C4;
     font-size: 34px;
@@ -130,5 +131,60 @@ button:hover{
     text-align: center;
     margin: 0;
     letter-spacing: -0.025em;
-    margin-top: 100px;
+    border-bottom: solid 4px #1359C4;
+}
+.products-list div {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    max-height: 12.5vh;
+    width: 100%;
+    border-bottom: solid 4px #1359C4;
+    padding: 20px 0;
+}
+.products-list div img{
+    max-height: 10vh;
+    max-width: 7.5vw;
+}
+.products-list div h1{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #1359C4;
+    font-size: 26px;
+    font-weight: 400;
+    text-align: center;
+    margin: 0;
+    letter-spacing: -0.025em;
+}
+.products-list div p{
+    font-family: Helvetica, sans-serif;
+    font-size: 18px;
+    color: #1359C4;
+    margin: 0;
+}
+
+.user{
+    max-height: 50vh;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 40px;
+
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #1359C4;
+    font-size: 34px;
+    font-weight: 400;
+    text-align: center;
+    margin: 0;
+    letter-spacing: -0.025em;
+}
+
+.user img{
+    max-width: 35vw;
+    max-height: 50vh;
+}
+
+#edit{
+    margin: auto;
+    margin-left: 50%;
+    font-size: 36px;
 }

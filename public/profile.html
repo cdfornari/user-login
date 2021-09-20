@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="google-signin-client_id" content="666663406124-fb1ntcn1n7c851eeutht8vdh6p7f9ds7.apps.googleusercontent.com">
+    <title>Home</title>
+    <link rel="stylesheet" href="home-style.css">
+    <meta name="google-signin-client_id" content="666663406124-fb1ntcn1n7c851eeutht8vdh6p7f9ds7.apps.googleusercontent.com">
+</head>
+<body>
+    <div class="profile-info">
+        <div class="info"></div>
+        <a href="/home">Home</a>
+    </div>
+    <div class="main">
+        <div class="user"></div>
+    </div>
+    <button id="edit">Edit</button>
+
+    <script>
+        const verifyUser = ()=>{
+        const token = localStorage.getItem('auth-token-cdfo');
+        if (!token){
+            window.location.href = '/login'
+        }else{
+            const data = {token};
+
+            const url = (window.location.hostname.includes('localhost'))
+                            ? 'http://localhost:8080/api/auth/verify'
+                            : 'https://restserver-curso-node-cdfo.herokuapp.com/api/auth/verify'
+
+            fetch(url,{
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            })
+            .then(res =>{
+                res.json()
+                    .then(data =>{
+                        if (!res.ok){
+                            localStorage.removeItem('auth-token-cdfo');
+                            window.location.href = '/login'
+                        }else{
+                            const user = data.authUser;
+                            sessionStorage.setItem('user',user);
+                            
+                            const img = document.createElement('img')
+                            if(user.img){
+                                img.setAttribute('src',user.img)
+                            }else{
+                                img.setAttribute('src','https://images.clipartlogo.com/files/images/30/302752/generic-male-avatar-rectangular_p')
+                            }
+
+                            const name = document.createElement('h1');
+                            name.textContent = 'Name: ' + user.name;
+                            name.classList.add('name');
+
+                            const role = document.createElement('p');
+                            let users;
+                            switch (user.role){
+                                case 'USER_ROLE':
+                                    role.textContent = 'Role: User';
+                                break;
+                                case 'ADMIN_ROLE':
+                                    role.textContent = 'Role: Admin';
+                                break;
+                                case 'VENTAS_ROLE':
+                                    role.textContent = 'Role: Vendedor';
+                                break;
+                            }
+                            role.classList.add('role');
+
+                            const email = document.createElement('p');
+                            email.textContent = 'Email: ' + user.email;
+                            email.classList.add('email');
+
+                            const logOut = document.createElement('a');
+                            logOut.textContent = 'Log Out';
+                            logOut.classList.add('logout');
+                            if (user.google){
+                                logOut.setAttribute('onclick','signOutGoogle();');
+                            }else{
+                                logOut.setAttribute('onclick','signOut();');
+                            }
+                            logOut.setAttribute('href','/login');
+
+                            document.querySelector('.user').appendChild(img);
+                            document.querySelector('.user').appendChild(name);
+                            document.querySelector('.user').appendChild(email);
+                            document.querySelector('.user').appendChild(role);
+                            document.querySelector('.profile-info').appendChild(logOut);
+                        }
+                    })
+            })
+            .catch(err => console.log(err))
+        }
+
+                            
+                            
+        }
+    
+    verifyUser();
+    </script>
+</body>
